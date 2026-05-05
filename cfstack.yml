@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: 'CloudFormation stack for the 503AZ UrbanGrow Group Project. Creates a scalable and deliberately insecure environment with a self-hosted MongoDB on EC2.'
+Description: 'CloudFormation stack for the 503AZ CivicNexus Innovations Group Project. Creates a scalable and deliberately insecure smart city environment with a self-hosted MongoDB on EC2.'
 
 Parameters:
   GroupName:
@@ -29,7 +29,7 @@ Resources:
       EnableDnsHostnames: true
       Tags:
         - Key: Name
-          Value: !Sub 'urbangrow-vpc-${GroupName}'
+          Value: !Sub 'civicnexus-vpc-${GroupName}'
         - Key: GroupName
           Value: !Ref GroupName
 
@@ -55,7 +55,7 @@ Resources:
       MapPublicIpOnLaunch: true
       Tags:
         - Key: Name
-          Value: !Sub 'urbangrow-public-subnet-1-${GroupName}'
+          Value: !Sub 'civicnexus-public-subnet-1-${GroupName}'
         - Key: GroupName
           Value: !Ref GroupName
 
@@ -68,7 +68,7 @@ Resources:
       MapPublicIpOnLaunch: true
       Tags:
         - Key: Name
-          Value: !Sub 'urbangrow-public-subnet-2-${GroupName}'
+          Value: !Sub 'civicnexus-public-subnet-2-${GroupName}'
         - Key: GroupName
           Value: !Ref GroupName
 
@@ -80,7 +80,7 @@ Resources:
       AvailabilityZone: !Select [0, !GetAZs '']
       Tags:
         - Key: Name
-          Value: !Sub 'urbangrow-private-subnet-1-${GroupName}'
+          Value: !Sub 'civicnexus-private-subnet-1-${GroupName}'
         - Key: GroupName
           Value: !Ref GroupName
 
@@ -92,7 +92,7 @@ Resources:
       AvailabilityZone: !Select [1, !GetAZs '']
       Tags:
         - Key: Name
-          Value: !Sub 'urbangrow-private-subnet-2-${GroupName}'
+          Value: !Sub 'civicnexus-private-subnet-2-${GroupName}'
         - Key: GroupName
           Value: !Ref GroupName
   
@@ -102,7 +102,7 @@ Resources:
       VpcId: !Ref VPC
       Tags:
         - Key: Name
-          Value: !Sub 'urbangrow-public-rt-${GroupName}'
+          Value: !Sub 'civicnexus-public-rt-${GroupName}'
         - Key: GroupName
           Value: !Ref GroupName
 
@@ -132,7 +132,7 @@ Resources:
       VpcId: !Ref VPC
       Tags:
         - Key: Name
-          Value: !Sub 'urbangrow-private-rt-${GroupName}'
+          Value: !Sub 'civicnexus-private-rt-${GroupName}'
         - Key: GroupName
           Value: !Ref GroupName
 
@@ -163,7 +163,7 @@ Resources:
           CidrIp: 0.0.0.0/0
       Tags:
         - Key: Name
-          Value: !Sub 'mongodb-sg-${GroupName}'
+          Value: !Sub 'civicnexus-mongodb-sg-${GroupName}'
         - Key: GroupName
           Value: !Ref GroupName
 
@@ -179,7 +179,7 @@ Resources:
       UserData:
         Fn::Base64: !Sub |
           #!/bin/bash
-          # Install MongoDB
+          # Install MongoDB for smart city operational data
           echo "[mongodb-org-7.0]" >> /etc/yum.repos.d/mongodb-org-7.0.repo
           echo "name=MongoDB Repository" >> /etc/yum.repos.d/mongodb-org-7.0.repo
           echo "baseurl=https://repo.mongodb.org/yum/amazon/2023/mongodb-org/7.0/x86_64/" >> /etc/yum.repos.d/mongodb-org-7.0.repo
@@ -195,7 +195,7 @@ Resources:
           systemctl restart mongod
       Tags:
         - Key: Name
-          Value: !Sub 'mongodb-instance-${GroupName}'
+          Value: !Sub 'civicnexus-mongodb-instance-${GroupName}'
         - Key: GroupName
           Value: !Ref GroupName
           
@@ -214,7 +214,7 @@ Resources:
           CidrIp: 0.0.0.0/0
       Tags:
         - Key: Name
-          Value: !Sub 'web-server-sg-${GroupName}'
+          Value: !Sub 'civicnexus-web-server-sg-${GroupName}'
         - Key: GroupName
           Value: !Ref GroupName
           
@@ -284,72 +284,72 @@ Resources:
         
           try {
               $client = new MongoDB\Client($uri);
-              $db = $client->urbangrow;
+              $db = $client->civicnexus;
           ?>
           <!DOCTYPE html>
           <html>
           <head>
-              <title>UrbanGrow Dashboard</title>
+              <title>CivicNexus Smart City Dashboard</title>
               <style>
                   body { font-family: Arial, sans-serif; margin: 2em; background-color: #f4f4f4; color: #333; }
-                  h1 { color: #2e8b57; }
+                h1 { color: #005ea8; }
                   details { margin-bottom: 1.5em; }
-                  summary { font-size: 1.2em; font-weight: bold; color: #2e8b57; cursor: pointer; }
+                summary { font-size: 1.2em; font-weight: bold; color: #005ea8; cursor: pointer; }
                   table { border-collapse: collapse; width: 100%; margin-top: 1em; box-shadow: 0 2px 3px rgba(0,0,0,0.1); }
                   th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
-                  th { background-color: #2e8b57; color: white; }
+                th { background-color: #005ea8; color: white; }
                   tr:nth-child(even) { background-color: #f9f9f9; }
                   .error { color: red; font-weight: bold; }
                   pre { margin: 0; font-size: 0.9em; }
               </style>
           </head>
           <body>
-              <h1>UrbanGrow Live Data</h1>
+              <h1>CivicNexus Live City Operations Data</h1>
         
-              <!-- Crop Data -->
+              <!-- Urban and Environmental Data -->
               <details open>
-                <summary>Crop Data</summary>
+              <summary>Urban & Environmental Data</summary>
                 <table>
-                    <tr><th>Batch ID</th><th>Species</th><th>Status</th><th>Temperature (°C)</th><th>Humidity (%)</th></tr>
-                    <?php foreach ($db->crop_data->find() as $doc): ?>
+                <tr><th>Record ID</th><th>Data Type</th><th>Location</th><th>Reading</th><th>Timestamp</th></tr>
+                <?php foreach ($db->urban_environment_data->find() as $doc): ?>
                         <tr>
-                            <td><?= htmlspecialchars($doc['batch_id'] ?? 'N/A') ?></td>
-                            <td><?= htmlspecialchars($doc['species'] ?? 'N/A') ?></td>
-                            <td><?= htmlspecialchars($doc['status'] ?? 'N/A') ?></td>
-                            <td><?= htmlspecialchars($doc['sensor_readings']['temperature_c'] ?? 'N/A') ?></td>
-                            <td><?= htmlspecialchars($doc['sensor_readings']['humidity_percent'] ?? 'N/A') ?></td>
+                    <td><?= htmlspecialchars($doc['record_id'] ?? 'N/A') ?></td>
+                    <td><?= htmlspecialchars($doc['data_type'] ?? 'N/A') ?></td>
+                    <td><?= htmlspecialchars($doc['location'] ?? 'N/A') ?></td>
+                    <td><?= htmlspecialchars($doc['reading_value'] ?? 'N/A') ?> <?= htmlspecialchars($doc['unit'] ?? '') ?></td>
+                    <td><?= $doc['timestamp'] ? htmlspecialchars($doc['timestamp']->toDateTime()->format('Y-m-d H:i:s')) : 'N/A' ?></td>
                         </tr>
                     <?php endforeach; ?>
                 </table>
               </details>
         
-              <!-- Staff Data -->
+              <!-- Personnel Data -->
               <details>
-                <summary>Staff Data</summary>
+              <summary>Personnel Data</summary>
                 <table>
-                    <tr><th>Staff ID</th><th>Name</th><th>Job Role</th><th>Contact</th><th>Qualifications</th></tr>
-                    <?php foreach ($db->staff_data->find() as $doc): ?>
+                <tr><th>Employee ID</th><th>Name</th><th>Job Role</th><th>Contact</th><th>Security Clearance</th></tr>
+                <?php foreach ($db->personnel_data->find() as $doc): ?>
                         <tr>
-                            <td><?= htmlspecialchars($doc['staff_id'] ?? 'N/A') ?></td>
+                    <td><?= htmlspecialchars($doc['employee_id'] ?? 'N/A') ?></td>
                             <td><?= htmlspecialchars($doc['name'] ?? 'N/A') ?></td>
                             <td><?= htmlspecialchars($doc['job_role'] ?? 'N/A') ?></td>
                             <td><?= htmlspecialchars($doc['contact'] ?? 'N/A') ?></td>
-                            <td><?= htmlspecialchars(implode(", ", iterator_to_array($doc['qualifications'] ?? []))) ?></td>
+                    <td><?= htmlspecialchars($doc['security_clearance'] ?? 'N/A') ?></td>
                         </tr>
                     <?php endforeach; ?>
                 </table>
               </details>
         
-              <!-- Operational Data -->
+              <!-- System & Operational Logs -->
               <details>
-                <summary>Operational Logs</summary>
+              <summary>System & Operational Logs</summary>
                 <table>
-                    <tr><th>Log ID</th><th>Timestamp</th><th>System</th><th>Event Type</th><th>Details</th></tr>
-                    <?php foreach ($db->operational_data->find() as $doc): ?>
+                <tr><th>Log ID</th><th>Timestamp</th><th>Subsystem</th><th>Event Type</th><th>Details</th></tr>
+                <?php foreach ($db->system_operational_logs->find() as $doc): ?>
                         <tr>
                             <td><?= htmlspecialchars($doc['log_id'] ?? 'N/A') ?></td>
                             <td><?= $doc['timestamp'] ? htmlspecialchars($doc['timestamp']->toDateTime()->format('Y-m-d H:i:s')) : 'N/A' ?></td>
-                            <td><?= htmlspecialchars($doc['system'] ?? 'N/A') ?></td>
+                    <td><?= htmlspecialchars($doc['subsystem'] ?? 'N/A') ?></td>
                             <td><?= htmlspecialchars($doc['event_type'] ?? 'N/A') ?></td>
                             <td><pre><?= htmlspecialchars(json_encode($doc['details'] ?? [], JSON_PRETTY_PRINT)) ?></pre></td>
                         </tr>
@@ -381,7 +381,7 @@ Resources:
           systemctl restart httpd
       Tags:
         - Key: Name
-          Value: !Sub 'web-server-instance-${GroupName}'
+          Value: !Sub 'civicnexus-web-server-instance-${GroupName}'
         - Key: GroupName
           Value: !Ref GroupName
 
@@ -401,7 +401,7 @@ Resources:
           CidrIp: 0.0.0.0/0
       Tags:
         - Key: Name
-          Value: !Sub 'vdi-sg-${GroupName}'
+          Value: !Sub 'civicnexus-vdi-sg-${GroupName}'
         - Key: GroupName
           Value: !Ref GroupName
 
@@ -417,7 +417,7 @@ Resources:
         - !Ref VDISecurityGroup
       Tags:
         - Key: Name
-          Value: !Sub 'vdi-instance-${GroupName}'
+          Value: !Sub 'civicnexus-vdi-instance-${GroupName}'
         - Key: GroupName
           Value: !Ref GroupName
           

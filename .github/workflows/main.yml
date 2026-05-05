@@ -1,4 +1,4 @@
-name: Deploy UrbanGrow CloudFormation Stack
+name: Deploy CivicNexus CloudFormation Stack
 
 on:
   workflow_dispatch:
@@ -18,10 +18,10 @@ jobs:
           aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
           aws-region: us-east-1
 
-      - name: Deploy Main UrbanGrow Stack
+      - name: Deploy Main CivicNexus Stack
         run: |
           aws cloudformation deploy \
-            --stack-name ${{ secrets.GROUP_NAME }}-urbangrow-stack \
+            --stack-name ${{ secrets.GROUP_NAME }}-civicnexus-stack \
             --template-file cfstack.yml \
             --capabilities CAPABILITY_IAM \
             --parameter-overrides \
@@ -40,7 +40,7 @@ jobs:
         id: getDBIp
         run: |
           DB_IP=$(aws cloudformation describe-stacks \
-            --stack-name ${{ secrets.GROUP_NAME }}-urbangrow-stack \
+            --stack-name ${{ secrets.GROUP_NAME }}-civicnexus-stack \
             --query "Stacks[0].Outputs[?OutputKey=='MongoServerPublicIP'].OutputValue" \
             --output text)
           echo "DB_SERVER_IP=$DB_IP" >> $GITHUB_ENV

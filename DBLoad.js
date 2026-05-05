@@ -1,84 +1,93 @@
-// Connect to the UrbanGrow database
-db = db.getSiblingDB('urbangrow');
+// Connect to the CivicNexus smart city database
+db = db.getSiblingDB('civicnexus');
 
 // Clear existing collections
-db.crop_data.drop();
-db.staff_data.drop();
-db.operational_data.drop();
+db.urban_environment_data.drop();
+db.personnel_data.drop();
+db.system_operational_logs.drop();
 
-// Insert Crop & Environmental Data
-db.crop_data.insertMany([
+// Insert urban and environmental data
+db.urban_environment_data.insertMany([
     {
-        batch_id: "lettuce-b1-2025",
-        species: "Lactuca sativa",
-        planting_date: new Date("2025-08-15T09:00:00Z"),
-        status: "growing",
-        sensor_readings: {
-            timestamp: new Date(),
-            temperature_c: 21.5,
-            humidity_percent: 65,
-            ph: 6.2,
-            co2_ppm: 450
-        },
-        nutrient_formula: "Formula-A"
-    },
-    {
-        batch_id: "tomato-r4-2025",
-        species: "Solanum lycopersicum",
-        planting_date: new Date("2025-08-10T11:30:00Z"),
-        status: "fruiting",
-        sensor_readings: {
-            timestamp: new Date(),
-            temperature_c: 24.0,
-            humidity_percent: 70,
-            ph: 5.8,
-            co2_ppm: 500
-        },
-        nutrient_formula: "Formula-C"
-    }
-]);
-
-// Insert Staff Data
-db.staff_data.insertMany([
-    {
-        staff_id: "AG-001",
-        name: "Dr. Alisha Reed",
-        job_role: "Senior Agronomist",
-        contact: "alisha.reed@urbangrow.local",
-        qualifications: ["PhD in Plant Science"]
-    },
-    {
-        staff_id: "TECH-012",
-        name: "Ben Carter",
-        job_role: "System Technician",
-        contact: "ben.carter@urbangrow.local",
-        qualifications: ["Certified HVAC Technician", "AWS Cloud Practitioner"]
-    }
-]);
-
-// Insert Operational Data
-db.operational_data.insertMany([
-    {
-        log_id: "log-irr-9871",
-        timestamp: new Date("2025-09-07T11:00:00Z"),
-        system: "Irrigation Control",
-        event_type: "cycle_start",
-        details: {
-            zone: "A1",
-            duration_minutes: 15,
-            flow_rate_lpm: 2.5
+        record_id: "traffic-flow-001",
+        data_type: "traffic_flow_monitor",
+        location: "Central Avenue / Sector 4",
+        timestamp: new Date("2026-04-29T08:15:00Z"),
+        reading_value: 428,
+        unit: "vehicles/hour",
+        metadata: {
+            sensor_vendor: "CivicSense",
+            status: "normal"
         }
     },
     {
-        log_id: "log-light-9872",
-        timestamp: new Date("2025-09-07T12:00:00Z"),
-        system: "Lighting Control",
-        event_type: "spectrum_change",
-        details: {
-            zone: "B2",
-            new_spectrum: "blue-heavy"
+        record_id: "air-quality-014",
+        data_type: "air_quality_reading",
+        location: "Riverside Monitoring Station",
+        timestamp: new Date("2026-04-29T08:20:00Z"),
+        reading_value: 41,
+        unit: "AQI",
+        metadata: {
+            pm25: 12,
+            pm10: 18,
+            status: "good"
         }
     }
 ]);
 
-print("✅ UrbanGrow database populated successfully.");
+// Insert personnel data
+db.personnel_data.insertMany([
+    {
+        employee_id: "CN-001",
+        name: "Dr. Maya Patel",
+        job_role: "Urban Planner",
+        contact: "maya.patel@civicnexus.local",
+        security_clearance: "Level 3"
+    },
+    {
+        employee_id: "CN-014",
+        name: "Jordan Ellis",
+        job_role: "Field Technician",
+        contact: "jordan.ellis@civicnexus.local",
+        security_clearance: "Level 2"
+    }
+]);
+
+// Insert system and operational logs
+db.system_operational_logs.insertMany([
+    {
+        log_id: "log-traffic-9001",
+        timestamp: new Date("2026-04-29T08:25:00Z"),
+        subsystem: "Traffic Light Control",
+        event_type: "sequence_update",
+        details: {
+            junction: "A12",
+            plan: "peak_morning_adjustment",
+            green_seconds: 42
+        }
+    },
+    {
+        log_id: "log-waste-9002",
+        timestamp: new Date("2026-04-29T08:40:00Z"),
+        subsystem: "Waste Management Dispatch",
+        event_type: "route_optimised",
+        details: {
+            district: "North Dock",
+            crew_id: "WM-07",
+            pickup_priority: "high"
+        }
+    },
+    {
+        log_id: "log-transport-9003",
+        timestamp: new Date("2026-04-29T08:55:00Z"),
+        subsystem: "Public Transport Dispatch",
+        event_type: "service_alert",
+        details: {
+            line: "TR-16",
+            status: "minor_delay",
+            reason: "signal_check_in_progress"
+        }
+    }
+]);
+
+print("CivicNexus database populated successfully.");
