@@ -205,12 +205,16 @@ Resources:
   WebServerSecurityGroup:
     Type: 'AWS::EC2::SecurityGroup'
     Properties:
-      GroupDescription: 'Insecure - Allows public HTTP traffic'
+      GroupDescription: 'Secure - Allows HTTP and HTTPS traffic'
       VpcId: !Ref VPC
       SecurityGroupIngress:
         - IpProtocol: tcp
           FromPort: 80
           ToPort: 80
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
           CidrIp: 0.0.0.0/0
       Tags:
         - Key: Name
@@ -248,7 +252,7 @@ Resources:
           # Install required packages
           dnf install -y httpd php php-fpm php-pear php-devel gcc make \
                          php-cli php-json php-openssl unzip \
-                         mongodb-mongosh
+                         mongodb-mongosh openssl mod_ssl
         
           # **FIX**: Set HOME variable for Composer installer
           export HOME=/root
@@ -378,6 +382,41 @@ Resources:
           systemctl start php-fpm
           systemctl enable httpd
           systemctl start httpd
+
+          # Generate self-signed certificate
+          openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+            -keyout /etc/pki/tls/private/civicnexus.key \
+            -out /etc/pki/tls/certs/civicnexus.crt \
+            -subj "/C=GB/ST=England/L=London/O=CivicNexus/CN=CivicNexus"
+          
+          # HTTPS setup
+          cat > /etc/httpd/conf.d/civicnexus-ssl.conf <<EOF
+          <VirtualHost *:443>
+              DocumentRoot /var/www/html
+          
+              SSLEngine on
+              SSLCertificateFile /etc/pki/tls/certs/civicnexus.crt
+              SSLCertificateKeyFile /etc/pki/tls/private/civicnexus.key
+          
+              <Directory "/var/www/html">
+                  AllowOverride All
+                  Require all granted
+              </Directory>
+          </VirtualHost>
+          EOF
+          
+          # Redirect HTTP -> HTTPS
+          cat > /etc/httpd/conf.d/civicnexus-redirect.conf <<EOF
+          <VirtualHost *:80>
+              RewriteEngine On
+              RewriteRule ^/(.*)$ https://%{HTTP_HOST}/\$1 [R=301,L]
+          </VirtualHost>
+          EOF
+          
+          # Rewrite module on
+          sed -i 's/^#LoadModule rewrite_module/LoadModule rewrite_module/' \
+          /etc/httpd/conf.modules.d/00-base.conf || true
+
           systemctl restart httpd
       Tags:
         - Key: Name
