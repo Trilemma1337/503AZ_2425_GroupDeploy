@@ -231,193 +231,188 @@ Resources:
       SecurityGroupIds:
         - !Ref WebServerSecurityGroup
       ImageId: ami-00ca32bbc84273381 # Amazon Linux 2023
-      UserData:
-        Fn::Base64: !Sub |
-          #!/bin/bash
-          set -xe
-        
-          # Update packages
-          dnf update -y
-        
-          # Add MongoDB repository
-          cat <<EOF > /etc/yum.repos.d/mongodb-org-7.0.repo
-          [mongodb-org-7.0]
-          name=MongoDB Repository
-          baseurl=https://repo.mongodb.org/yum/amazon/2023/mongodb-org/7.0/x86_64/
-          gpgcheck=1
-          enabled=1
-          gpgkey=https://www.mongodb.org/static/pgp/server-7.0.asc
-          EOF
-        
-          # Install required packages
-          dnf install -y httpd php php-fpm php-pear php-devel gcc make \
-                         php-cli php-json php-openssl unzip \
-                         mongodb-mongosh openssl mod_ssl
-        
-          # **FIX**: Set HOME variable for Composer installer
-          export HOME=/root
-          
-          # Install Composer globally
-          curl -sS https://getcomposer.org/installer | php
-          mv composer.phar /usr/local/bin/composer
-          chmod +x /usr/local/bin/composer
-          composer --version
-        
-          # Install MongoDB PHP Driver via PECL
-          pecl channel-update pecl.php.net
-          printf "\n" | pecl install mongodb
-          echo "extension=mongodb.so" > /etc/php.d/50-mongodb.ini
-        
-          # Enable error display in PHP
-          sed -i 's/display_errors = Off/display_errors = On/' /etc/php.ini
-        
-          # Allow Apache network access
-          setsebool -P httpd_can_network_connect 1
-        
-          # Write dashboard app
-          cat <<'EOF' > /var/www/html/index.php
-          <?php
-          ini_set('display_errors', 1);
-          ini_set('display_startup_errors', 1);
-          error_reporting(E_ALL);
-        
-          require '/var/www/html/vendor/autoload.php';
-        
-          $mongoIp = "${MongoEC2Instance.PublicIp}";
-          $uri = "mongodb://$mongoIp:27017";
-        
-          try {
-              $client = new MongoDB\Client($uri);
-              $db = $client->civicnexus;
-          ?>
-          <!DOCTYPE html>
-          <html>
-          <head>
-              <title>CivicNexus Smart City Dashboard</title>
-              <style>
-                  body { font-family: Arial, sans-serif; margin: 2em; background-color: #f4f4f4; color: #333; }
-                h1 { color: #005ea8; }
-                  details { margin-bottom: 1.5em; }
-                summary { font-size: 1.2em; font-weight: bold; color: #005ea8; cursor: pointer; }
-                  table { border-collapse: collapse; width: 100%; margin-top: 1em; box-shadow: 0 2px 3px rgba(0,0,0,0.1); }
-                  th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
-                th { background-color: #005ea8; color: white; }
-                  tr:nth-child(even) { background-color: #f9f9f9; }
-                  .error { color: red; font-weight: bold; }
-                  pre { margin: 0; font-size: 0.9em; }
-              </style>
-          </head>
-          <body>
-              <h1>CivicNexus Live City Operations Data</h1>
-        
-              <!-- Urban and Environmental Data -->
-              <details open>
-              <summary>Urban & Environmental Data</summary>
-                <table>
+UserData:
+  Fn::Base64: !Sub |
+    #!/bin/bash
+    set -xe
+
+    # Update packages
+    dnf update -y
+
+    # Add MongoDB repository
+    cat > /etc/yum.repos.d/mongodb-org-7.0.repo <<'EOF'
+    [mongodb-org-7.0]
+    name=MongoDB Repository
+    baseurl=https://repo.mongodb.org/yum/amazon/2023/mongodb-org/7.0/x86_64/
+    gpgcheck=1
+    enabled=1
+    gpgkey=https://www.mongodb.org/static/pgp/server-7.0.asc
+    EOF
+
+    # Install required packages
+    dnf install -y httpd php php-fpm php-pear php-devel gcc make \
+                   php-cli php-json php-openssl unzip \
+                   mongodb-mongosh openssl mod_ssl
+
+    # Set HOME variable for Composer installer
+    export HOME=/root
+
+    # Install Composer globally
+    curl -sS https://getcomposer.org/installer | php
+    mv composer.phar /usr/local/bin/composer
+    chmod +x /usr/local/bin/composer
+    composer --version
+
+    # Install MongoDB PHP Driver via PECL
+    pecl channel-update pecl.php.net
+    printf "\n" | pecl install mongodb
+    echo "extension=mongodb.so" > /etc/php.d/50-mongodb.ini
+
+    # Enable error display in PHP
+    sed -i 's/display_errors = Off/display_errors = On/' /etc/php.ini
+
+    # Allow Apache network access
+    setsebool -P httpd_can_network_connect 1
+
+    # Write dashboard app
+    cat > /var/www/html/index.php <<'EOF'
+    <?php
+    ini_set('display_errors', 1);
+    ini_set('display_startup_errors', 1);
+    error_reporting(E_ALL);
+
+    require '/var/www/html/vendor/autoload.php';
+
+    $mongoIp = "${MongoEC2Instance.PublicIp}";
+    $uri = "mongodb://$mongoIp:27017";
+
+    try {
+        $client = new MongoDB\Client($uri);
+        $db = $client->civicnexus;
+    ?>
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>CivicNexus Smart City Dashboard</title>
+        <style>
+            body { font-family: Arial, sans-serif; margin: 2em; background-color: #f4f4f4; color: #333; }
+            h1 { color: #005ea8; }
+            details { margin-bottom: 1.5em; }
+            summary { font-size: 1.2em; font-weight: bold; color: #005ea8; cursor: pointer; }
+            table { border-collapse: collapse; width: 100%; margin-top: 1em; box-shadow: 0 2px 3px rgba(0,0,0,0.1); }
+            th, td { border: 1px solid #ddd; padding: 12px; text-align: left; vertical-align: top; }
+            th { background-color: #005ea8; color: white; }
+            tr:nth-child(even) { background-color: #f9f9f9; }
+            .error { color: red; font-weight: bold; }
+            pre { margin: 0; font-size: 0.9em; white-space: pre-wrap; }
+        </style>
+    </head>
+    <body>
+        <h1>CivicNexus Live City Operations Data</h1>
+
+        <details open>
+            <summary>Urban &amp; Environmental Data</summary>
+            <table>
                 <tr><th>Record ID</th><th>Data Type</th><th>Location</th><th>Reading</th><th>Timestamp</th></tr>
                 <?php foreach ($db->urban_environment_data->find() as $doc): ?>
-                        <tr>
-                    <td><?= htmlspecialchars($doc['record_id'] ?? 'N/A') ?></td>
-                    <td><?= htmlspecialchars($doc['data_type'] ?? 'N/A') ?></td>
-                    <td><?= htmlspecialchars($doc['location'] ?? 'N/A') ?></td>
-                    <td><?= htmlspecialchars($doc['reading_value'] ?? 'N/A') ?> <?= htmlspecialchars($doc['unit'] ?? '') ?></td>
-                    <td><?= $doc['timestamp'] ? htmlspecialchars($doc['timestamp']->toDateTime()->format('Y-m-d H:i:s')) : 'N/A' ?></td>
-                        </tr>
-                    <?php endforeach; ?>
-                </table>
-              </details>
-        
-              <!-- Personnel Data -->
-              <details>
-              <summary>Personnel Data</summary>
-                <table>
+                    <tr>
+                        <td><?= htmlspecialchars($doc['record_id'] ?? 'N/A') ?></td>
+                        <td><?= htmlspecialchars($doc['data_type'] ?? 'N/A') ?></td>
+                        <td><?= htmlspecialchars($doc['location'] ?? 'N/A') ?></td>
+                        <td><?= htmlspecialchars($doc['reading_value'] ?? 'N/A') ?> <?= htmlspecialchars($doc['unit'] ?? '') ?></td>
+                        <td><?= isset($doc['timestamp']) ? htmlspecialchars($doc['timestamp']->toDateTime()->format('Y-m-d H:i:s')) : 'N/A' ?></td>
+                    </tr>
+                <?php endforeach; ?>
+            </table>
+        </details>
+
+        <details>
+            <summary>Personnel Data</summary>
+            <table>
                 <tr><th>Employee ID</th><th>Name</th><th>Job Role</th><th>Contact</th><th>Security Clearance</th></tr>
                 <?php foreach ($db->personnel_data->find() as $doc): ?>
-                        <tr>
-                    <td><?= htmlspecialchars($doc['employee_id'] ?? 'N/A') ?></td>
-                            <td><?= htmlspecialchars($doc['name'] ?? 'N/A') ?></td>
-                            <td><?= htmlspecialchars($doc['job_role'] ?? 'N/A') ?></td>
-                            <td><?= htmlspecialchars($doc['contact'] ?? 'N/A') ?></td>
-                    <td><?= htmlspecialchars($doc['security_clearance'] ?? 'N/A') ?></td>
-                        </tr>
-                    <?php endforeach; ?>
-                </table>
-              </details>
-        
-              <!-- System & Operational Logs -->
-              <details>
-              <summary>System & Operational Logs</summary>
-                <table>
+                    <tr>
+                        <td><?= htmlspecialchars($doc['employee_id'] ?? 'N/A') ?></td>
+                        <td><?= htmlspecialchars($doc['name'] ?? 'N/A') ?></td>
+                        <td><?= htmlspecialchars($doc['job_role'] ?? 'N/A') ?></td>
+                        <td><?= htmlspecialchars($doc['contact'] ?? 'N/A') ?></td>
+                        <td><?= htmlspecialchars($doc['security_clearance'] ?? 'N/A') ?></td>
+                    </tr>
+                <?php endforeach; ?>
+            </table>
+        </details>
+
+        <details>
+            <summary>System &amp; Operational Logs</summary>
+            <table>
                 <tr><th>Log ID</th><th>Timestamp</th><th>Subsystem</th><th>Event Type</th><th>Details</th></tr>
                 <?php foreach ($db->system_operational_logs->find() as $doc): ?>
-                        <tr>
-                            <td><?= htmlspecialchars($doc['log_id'] ?? 'N/A') ?></td>
-                            <td><?= $doc['timestamp'] ? htmlspecialchars($doc['timestamp']->toDateTime()->format('Y-m-d H:i:s')) : 'N/A' ?></td>
-                    <td><?= htmlspecialchars($doc['subsystem'] ?? 'N/A') ?></td>
-                            <td><?= htmlspecialchars($doc['event_type'] ?? 'N/A') ?></td>
-                            <td><pre><?= htmlspecialchars(json_encode($doc['details'] ?? [], JSON_PRETTY_PRINT)) ?></pre></td>
-                        </tr>
-                    <?php endforeach; ?>
-                </table>
-              </details>
-        
-          </body>
-          </html>
-          <?php
-          } catch (Exception $e) {
-              echo "<p class='error'>Failed to connect to MongoDB: " . $e->getMessage() . "</p>";
-          }
-          ?>
-          EOF
-        
-          # Run Composer as ec2-user, then restore ownership
-          chown -R ec2-user:ec2-user /var/www/html
-          cd /var/www/html
-          sudo -u ec2-user composer require mongodb/mongodb
-          chown -R apache:apache /var/www/html
-          chmod -R 755 /var/www/html
-        
-          # Enable and start services
-          systemctl enable php-fpm
-          systemctl start php-fpm
-          systemctl enable httpd
-          systemctl start httpd
+                    <tr>
+                        <td><?= htmlspecialchars($doc['log_id'] ?? 'N/A') ?></td>
+                        <td><?= isset($doc['timestamp']) ? htmlspecialchars($doc['timestamp']->toDateTime()->format('Y-m-d H:i:s')) : 'N/A' ?></td>
+                        <td><?= htmlspecialchars($doc['subsystem'] ?? 'N/A') ?></td>
+                        <td><?= htmlspecialchars($doc['event_type'] ?? 'N/A') ?></td>
+                        <td><pre><?= htmlspecialchars(json_encode($doc['details'] ?? [], JSON_PRETTY_PRINT)) ?></pre></td>
+                    </tr>
+                <?php endforeach; ?>
+            </table>
+        </details>
+    </body>
+    </html>
+    <?php
+    } catch (Exception $e) {
+        echo "<p class='error'>Failed to connect to MongoDB: " . htmlspecialchars($e->getMessage()) . "</p>";
+    }
+    ?>
+    EOF
 
-          # Generate self-signed certificate
-          openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
-            -keyout /etc/pki/tls/private/civicnexus.key \
-            -out /etc/pki/tls/certs/civicnexus.crt \
-            -subj "/C=GB/ST=England/L=London/O=CivicNexus/CN=CivicNexus"
-          
-          # HTTPS setup
-          cat > /etc/httpd/conf.d/civicnexus-ssl.conf <<EOF
-          <VirtualHost *:443>
-              DocumentRoot /var/www/html
-          
-              SSLEngine on
-              SSLCertificateFile /etc/pki/tls/certs/civicnexus.crt
-              SSLCertificateKeyFile /etc/pki/tls/private/civicnexus.key
-          
-              <Directory "/var/www/html">
-                  AllowOverride All
-                  Require all granted
-              </Directory>
-          </VirtualHost>
-          EOF
-          
-          # Redirect HTTP -> HTTPS
-          cat > /etc/httpd/conf.d/civicnexus-redirect.conf <<EOF
-          <VirtualHost *:80>
-              RewriteEngine On
-              RewriteRule ^/(.*)$ https://%{HTTP_HOST}/\$1 [R=301,L]
-          </VirtualHost>
-          EOF
-          
-          # Rewrite module on
-          sed -i 's/^#LoadModule rewrite_module/LoadModule rewrite_module/' \
-          /etc/httpd/conf.modules.d/00-base.conf || true
+    # Run Composer as ec2-user, then restore ownership
+    chown -R ec2-user:ec2-user /var/www/html
+    cd /var/www/html
+    sudo -u ec2-user -H composer require mongodb/mongodb
+    chown -R apache:apache /var/www/html
+    chmod -R 755 /var/www/html
 
-          systemctl restart httpd
+    # Enable and start services
+    systemctl enable php-fpm
+    systemctl start php-fpm
+    systemctl enable httpd
+    systemctl start httpd
+
+    # Generate self-signed certificate
+    openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+      -keyout /etc/pki/tls/private/civicnexus.key \
+      -out /etc/pki/tls/certs/civicnexus.crt \
+      -subj "/C=GB/ST=England/L=London/O=CivicNexus/CN=CivicNexus"
+
+    # HTTPS setup
+    cat > /etc/httpd/conf.d/civicnexus-ssl.conf <<'EOF'
+    <VirtualHost *:443>
+        DocumentRoot /var/www/html
+
+        SSLEngine on
+        SSLCertificateFile /etc/pki/tls/certs/civicnexus.crt
+        SSLCertificateKeyFile /etc/pki/tls/private/civicnexus.key
+
+        <Directory "/var/www/html">
+            AllowOverride All
+            Require all granted
+        </Directory>
+    </VirtualHost>
+    EOF
+
+    # Redirect HTTP -> HTTPS
+    cat > /etc/httpd/conf.d/civicnexus-redirect.conf <<'EOF'
+    <VirtualHost *:80>
+        RewriteEngine On
+        RewriteRule ^/(.*)$ https://%{HTTP_HOST}/$1 [R=301,L]
+    </VirtualHost>
+    EOF
+
+    # Rewrite module on
+    sed -i 's/^#LoadModule rewrite_module/LoadModule rewrite_module/' /etc/httpd/conf.modules.d/00-base.conf || true
+
+    systemctl restart httpd
       Tags:
         - Key: Name
           Value: !Sub 'civicnexus-web-server-instance-${GroupName}'
