@@ -416,7 +416,6 @@ Resources:
           <VirtualHost *:80>
               ServerName _default_
         
-              RewriteEngine On
               Redirect permanent / https://%{HTTP_HOST}/
           </VirtualHost>
           EOF
