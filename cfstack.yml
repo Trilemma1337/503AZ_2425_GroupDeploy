@@ -388,30 +388,42 @@ Resources:
           # HTTPS setup
           cat > /etc/httpd/conf.d/civicnexus-ssl.conf <<'EOF'
           <VirtualHost *:443>
+              ServerName _default_
+    
               DocumentRoot /var/www/html
       
               SSLEngine on
               SSLCertificateFile /etc/pki/tls/certs/civicnexus.crt
               SSLCertificateKeyFile /etc/pki/tls/private/civicnexus.key
+
+              # PHP Handler
+              <FilesMatch \.php$>
+                SetHandler "proxy:unix:/run/php-fpm/www.sock|fcgi://localhost"
+              </FilesMatch>
       
               <Directory "/var/www/html">
                   AllowOverride All
                   Require all granted
               </Directory>
+
+              ErrorLog /var/log/httpd/civicnexus-error.log
+              CustomLog /var/log/httpd/civicnexus-access.log combined
           </VirtualHost>
           EOF
       
           # Redirect HTTP -> HTTPS
           cat > /etc/httpd/conf.d/civicnexus-redirect.conf <<'EOF'
           <VirtualHost *:80>
+              ServerName _default_
+        
               RewriteEngine On
-              RewriteRule ^/(.*)$ https://%{HTTP_HOST}/$1 [R=301,L]
+              Redirect permanent / https://%{HTTP_HOST}/
           </VirtualHost>
           EOF
       
           # Rewrite module on
           sed -i 's/^#LoadModule rewrite_module/LoadModule rewrite_module/' /etc/httpd/conf.modules.d/00-base.conf || true
-      
+
           systemctl restart httpd
       Tags:
         - Key: Name
