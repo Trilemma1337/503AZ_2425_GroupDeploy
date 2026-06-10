@@ -27,6 +27,7 @@ jobs:
             --parameter-overrides \
               GroupName=${{ secrets.GROUP_NAME }} \
               GroupSize=${{ secrets.GROUP_SIZE }} \
+              MongoAdminPassword=${{ secrets.MONGO_ADMIN_PASSWORD }} \
               KeyName=${{ secrets.KEY_NAME }}
 
       - name: Install MongoDB Shell
