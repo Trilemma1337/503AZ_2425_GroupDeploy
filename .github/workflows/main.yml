@@ -29,6 +29,7 @@ jobs:
               GroupSize=${{ secrets.GROUP_SIZE }} \
               MongoAdminPassword=${{ secrets.MONGO_ADMIN_PASSWORD }} \
               KeyName=${{ secrets.KEY_NAME }}
+            --capabilities CAPABILITY_NAMED_IAM
 
       - name: Install MongoDB Shell
         run: |
