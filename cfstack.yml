@@ -190,33 +190,10 @@ Resources:
         - Key: GroupName
           Value: !Ref GroupName
 
-  MongoInstanceRole:
-    Type: AWS::IAM::Role
-    Properties:
-      RoleName: !Sub 'civicnexus-mongo-role-${GroupName}'
-      AssumeRolePolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service: ec2.amazonaws.com
-            Action: sts:AssumeRole
-      ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
-      Tags:
-        - Key: GroupName
-          Value: !Ref GroupName
-  
-  MongoInstanceProfile:
-    Type: AWS::IAM::InstanceProfile
-    Properties:
-      Roles:
-        - !Ref MongoInstanceRole
-
   MongoEC2Instance:
     Type: 'AWS::EC2::Instance'
     Properties:
-      IamInstanceProfile: !Ref MongoInstanceProfile ## SSM support
+      IamInstanceProfile: !Sub 'arn:aws:iam::${AWS::AccountId}:instance-profile/LabInstanceProfile' ## SSM support
       InstanceType: t3.small
       SubnetId: !Ref PrivateSubnet1 ## No public access
       KeyName: !Ref KeyName
