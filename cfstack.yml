@@ -106,6 +106,13 @@ Resources:
         - Key: GroupName
           Value: !Ref GroupName
 
+  PrivateDefaultRoute:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: !Ref NatGateway
+
   DefaultPublicRoute:
     Type: 'AWS::EC2::Route'
     DependsOn: AttachGateway
@@ -147,6 +154,18 @@ Resources:
     Properties:
       RouteTableId: !Ref PrivateRouteTable
       SubnetId: !Ref PrivateSubnet2
+
+  NatEIP:
+    Type: AWS::EC2::EIP
+    Properties:
+      Domain: vpc
+  
+  NatGateway:
+    Type: AWS::EC2::NatGateway
+    DependsOn: NatEIP
+    Properties:
+      AllocationId: !GetAtt NatEIP.AllocationId
+      SubnetId: !Ref PublicSubnet1
 
   # ------------------------------------------------------------#
   # Asset 2: MongoDB EC2 Instance (Student 2)
