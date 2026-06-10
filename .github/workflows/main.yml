@@ -48,10 +48,26 @@ jobs:
       - name: Load Data into MongoDB
         run: |
           sleep 60
+          
+          # Upload data file
+          ENCODED=$(base64 -w 0 DBLoad.js)
           aws ssm send-command \
             --instance-id ${{ env.DB_INSTANCE_ID }} \
             --document-name "AWS-RunShellScript" \
-            --parameters commands=["$(cat DBLoad.js | base64 | tr -d '\n' | xargs -I{} echo "echo {} | base64 -d | mongosh mongodb://localhost:27017")"] \
-            --wait
+            --parameters commands=["echo $ENCODED | base64 -d > /tmp/DBLoad.js"]
+          
+          sleep 5
+          
+          # Populate it
+          COMMAND_ID=$(aws ssm send-command \
+            --instance-id ${{ env.DB_INSTANCE_ID }} \
+            --document-name "AWS-RunShellScript" \
+            --parameters commands=["mongosh mongodb://localhost:27017 < /tmp/DBLoad.js"] \
+            --output text \
+            --query 'Command.CommandId')
+          
+          aws ssm wait command-executed \
+            --command-id $COMMAND_ID \
+            --instance-id ${{ env.DB_INSTANCE_ID }}
 
 
