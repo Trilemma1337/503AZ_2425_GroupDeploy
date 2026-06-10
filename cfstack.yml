@@ -457,13 +457,13 @@ Resources:
     Type: 'AWS::EC2::SecurityGroup'
     Condition: CreateVDI
     Properties:
-      GroupDescription: 'Insecure - Allows public RDP traffic'
+      GroupDescription: 'Secure - Allows traffic only from bastion group'
       VpcId: !Ref VPC
       SecurityGroupIngress:
         - IpProtocol: tcp
           FromPort: 3389
           ToPort: 3389
-          CidrIp: 0.0.0.0/0
+          SourceSecurityGroupId: !Ref WebServerSecurityGroup
       Tags:
         - Key: Name
           Value: !Sub 'civicnexus-vdi-sg-${GroupName}'
@@ -477,12 +477,46 @@ Resources:
       InstanceType: t3.medium
       ImageId: ami-0798c9ebaf695e14e # Windows Server 2025 Base
       KeyName: !Ref KeyName
-      SubnetId: !Ref PublicSubnet1 # Insecurely placed in a public subnet for easy access
+      SubnetId: !Ref PrivateSubnet1 # Securely placed it into private subnet to prevent from unauthorized access
       SecurityGroupIds:
         - !Ref VDISecurityGroup
       Tags:
         - Key: Name
           Value: !Sub 'civicnexus-vdi-instance-${GroupName}'
+        - Key: GroupName
+          Value: !Ref GroupName
+
+  # ------------------------------------------------------------#
+  # Asset 4: Bastion setup
+  # ------------------------------------------------------------#
+  BastionSecurityGroup:
+    Type: 'AWS::EC2::SecurityGroup'
+    Properties:
+      GroupDescription: 'Secure - Allows traffic only for ssh and RDP'
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 3389
+          ToPort: 3389
+          CidrIp: 0.0.0.0/0
+      Tags:
+        - Key: Name
+          Value: !Sub 'civicnexus-bastion-sg-${GroupName}'
+        - Key: GroupName
+          Value: !Ref GroupName
+
+  BastionInstance:
+    Type: 'AWS::EC2::Instance'
+    Properties:
+      InstanceType: t3.medium
+      ImageId: ami-0798c9ebaf695e14e # Windows Server 2025 Base
+      KeyName: !Ref KeyName
+      SubnetId: !Ref PublicSubnet1 # Bastion host is placed in public subnet
+      SecurityGroupIds:
+        - !Ref BastionSecurityGroup
+      Tags:
+        - Key: Name
+          Value: !Sub 'civicnexus-bastion-instance-${GroupName}'
         - Key: GroupName
           Value: !Ref GroupName
           
