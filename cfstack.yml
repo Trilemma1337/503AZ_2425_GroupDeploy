@@ -154,13 +154,17 @@ Resources:
   MongoSecurityGroup:
     Type: 'AWS::EC2::SecurityGroup'
     Properties:
-      GroupDescription: 'Insecure - Allows all traffic to MongoDB'
+      GroupDescription: 'Secure - Allows web server traffic to MongoDB'
       VpcId: !Ref VPC
       SecurityGroupIngress:
         - IpProtocol: tcp
           FromPort: 27017
           ToPort: 27017
-          CidrIp: 0.0.0.0/0
+          CidrIp: 10.0.1.0/0
+        - IpProtocol: tcp
+          FromPort: 27017
+          ToPort: 27017
+          CidrIp: 10.0.2.0/0
       Tags:
         - Key: Name
           Value: !Sub 'civicnexus-mongodb-sg-${GroupName}'
@@ -171,7 +175,7 @@ Resources:
     Type: 'AWS::EC2::Instance'
     Properties:
       InstanceType: t3.small
-      SubnetId: !Ref PublicSubnet1
+      SubnetId: !Ref PrivateSubnet1 ## No public access
       KeyName: !Ref KeyName
       SecurityGroupIds:
         - !Ref MongoSecurityGroup
@@ -190,8 +194,8 @@ Resources:
           # Start and enable MongoDB
           systemctl start mongod
           systemctl enable mongod
-          # Insecurely configure MongoDB to listen on all interfaces
-          sed -i 's/bindIp: 127.0.0.1/bindIp: 0.0.0.0/g' /etc/mongod.conf
+          # Listening on loopback and EC2 ip
+          sed -i 's/bindIp: 127.0.0.1/bindIp: ${MongoEC2Instance.PrivateIp}/g' /etc/mongod.conf
           systemctl restart mongod
       Tags:
         - Key: Name
