@@ -193,7 +193,7 @@ Resources:
   MongoEC2Instance:
     Type: 'AWS::EC2::Instance'
     Properties:
-      IamInstanceProfile: !Sub 'arn:aws:iam::${AWS::AccountId}:instance-profile/LabInstanceProfile' ## SSM support
+      IamInstanceProfile: LabInstanceProfile
       InstanceType: t3.small
       SubnetId: !Ref PrivateSubnet1 ## No public access
       KeyName: !Ref KeyName
