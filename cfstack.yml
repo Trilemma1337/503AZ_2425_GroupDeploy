@@ -235,6 +235,10 @@ Resources:
           FromPort: 443
           ToPort: 443
           CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          SourceSecurityGroupId: !Ref BastionSecurityGroup
       Tags:
         - Key: Name
           Value: !Sub 'civicnexus-web-server-sg-${GroupName}'
@@ -524,6 +528,9 @@ Outputs:
   WebServerPublicIP:
     Description: 'Public IP address of the Web Server'
     Value: !GetAtt WebServerInstance.PublicIp
+  MongoInstanceId:
+    Description: 'Instance ID of MongoDB EC2'
+    Value: !Ref MongoEC2Instance
   VDIInstanceId:
     Description: 'Instance ID of the VDI instance (if created)'
     Condition: CreateVDI
