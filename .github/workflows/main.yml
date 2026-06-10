@@ -45,11 +45,24 @@ jobs:
             --output text)
           echo "DB_INSTANCE_ID=$DB_INSTANCE_ID" >> $GITHUB_ENV
       
+      - name: Wait for SSM
+        run: |
+          echo "Waiting for SSM to be ready..."
+          for i in {1..20}; do
+            STATUS=$(aws ssm describe-instance-information \
+              --filters "Key=InstanceIds,Values=${{ env.DB_INSTANCE_ID }}" \
+              --query 'InstanceInformationList[0].PingStatus' \
+              --output text)
+            echo "SSM status: $STATUS"
+            if [ "$STATUS" = "Online" ]; then
+              echo "SSM is ready"
+              break
+            fi
+            sleep 15
+          done
+      
       - name: Load Data into MongoDB
         run: |
-          sleep 60
-          
-          # Upload data file
           ENCODED=$(base64 -w 0 DBLoad.js)
           aws ssm send-command \
             --instance-id ${{ env.DB_INSTANCE_ID }} \
@@ -58,7 +71,6 @@ jobs:
           
           sleep 5
           
-          # Populate it
           COMMAND_ID=$(aws ssm send-command \
             --instance-id ${{ env.DB_INSTANCE_ID }} \
             --document-name "AWS-RunShellScript" \
