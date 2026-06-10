@@ -194,8 +194,8 @@ Resources:
           # Start and enable MongoDB
           systemctl start mongod
           systemctl enable mongod
-          # Listening on loopback and EC2 ip
-          sed -i 's/bindIp: 127.0.0.1/bindIp: ${MongoEC2Instance.PrivateIp}/g' /etc/mongod.conf
+          # Listening on loopback and publicly within the private subnet
+          sed -i 's/bindIp: 127.0.0.1/bindIp: 0.0.0.0/g' /etc/mongod.conf
           systemctl restart mongod
       Tags:
         - Key: Name
