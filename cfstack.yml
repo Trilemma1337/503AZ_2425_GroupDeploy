@@ -287,7 +287,7 @@ Resources:
       
           require '/var/www/html/vendor/autoload.php';
       
-          $mongoIp = "${MongoEC2Instance.PublicIp}";
+          $mongoIp = "${MongoEC2Instance.PrivateIp}";
           $uri = "mongodb://$mongoIp:27017";
       
           try {
@@ -475,9 +475,6 @@ Outputs:
   WebServerPublicIP:
     Description: 'Public IP address of the Web Server'
     Value: !GetAtt WebServerInstance.PublicIp
-  MongoServerPublicIP:
-    Description: 'The Public IP of the MongoDB EC2 Instance. Use this to connect from other instances in the VPC.'
-    Value: !GetAtt MongoEC2Instance.PublicIp
   VDIInstanceId:
     Description: 'Instance ID of the VDI instance (if created)'
     Condition: CreateVDI
